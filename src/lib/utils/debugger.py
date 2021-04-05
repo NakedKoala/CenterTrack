@@ -64,9 +64,10 @@ class Debugger(object):
       bg * (1 - trans)).astype(np.uint8)
   
   def show_img(self, pause = False, imgId = 'default'):
-    cv2.imshow('{}'.format(imgId), self.imgs[imgId])
-    if pause:
-      cv2.waitKey()
+    pass
+    # cv2.imshow('{}'.format(imgId), self.imgs[imgId])
+    # if pause:
+    #   cv2.waitKey()
   
   def add_blend_img(self, back, fore, img_id='blend', trans=0.7):
     if self.theme == 'white':
@@ -206,10 +207,11 @@ class Debugger(object):
 
   def show_all_imgs(self, pause=False, Time=0):
     if 1:
-      for i, v in self.imgs.items():
-        cv2.imshow('{}'.format(i), v)
+      # for i, v in self.imgs.items():
+      #   cv2.imshow('{}'.format(i), v)
       if not self.with_3d:
-        cv2.waitKey(0 if pause else 1)
+        pass
+        # cv2.waitKey(0 if pause else 1)
       else:
         max_range = np.array([
           self.xmax-self.xmin, self.ymax-self.ymin, self.zmax-self.zmin]).max()

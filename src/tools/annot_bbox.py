@@ -94,8 +94,9 @@ if __name__ == '__main__':
     expt_cls, pts = [], []
     while True:
       finished = False
-      cv2.imshow(image_name, img)
-      key = cv2.waitKey(1)
+      # cv2.imshow(image_name, img)
+      # key = cv2.waitKey(1)
+      key = None
       if key == 100:
         i = i + 1
         save_txt(txt_name, expt_cls)
