@@ -75,7 +75,7 @@ class GenericDataset(data.Dataset):
 
   def __getitem__(self, index):
     opt = self.opt
-    img, anns, img_info, img_path = self._load_data(index)
+    img, raft, anns, img_info, img_path = self._load_data(index)
 
     height, width = img.shape[0], img.shape[1]
     c = np.array([img.shape[1] / 2., img.shape[0] / 2.], dtype=np.float32)
@@ -88,6 +88,7 @@ class GenericDataset(data.Dataset):
       if np.random.random() < opt.flip:
         flipped = 1
         img = img[:, ::-1, :]
+        raft = raft[:, ::-1, :]
         anns = self._flip_anns(anns, width)
 
     trans_input = get_affine_transform(
@@ -95,12 +96,13 @@ class GenericDataset(data.Dataset):
     trans_output = get_affine_transform(
       c, s, rot, [opt.output_w, opt.output_h])
     inp = self._get_input(img, trans_input)
-    ret = {'image': inp}
+    raft_proc = self._get_input_raft(raft, trans_input)
+    ret = {'image': inp, 'raft': raft_proc}
     gt_det = {'bboxes': [], 'scores': [], 'clses': [], 'cts': []}
 
     pre_cts, track_ids = None, None
     if opt.tracking:
-      pre_image, pre_anns, frame_dist = self._load_pre_data(
+      pre_image, _, pre_anns, frame_dist = self._load_pre_data(
         img_info['video_id'], img_info['frame_id'], 
         img_info['sensor_id'] if 'sensor_id' in img_info else 1)
       if flipped:
@@ -161,19 +163,38 @@ class GenericDataset(data.Dataset):
   def _load_image_anns(self, img_id, coco, img_dir):
     img_info = coco.loadImgs(ids=[img_id])[0]
     file_name = img_info['file_name']
+   
     img_path = os.path.join(img_dir, file_name)
+
+    ## TODO: to remove
+    # img_path = '/content/CenterTrack/data/mot17/train/MOT17-02-SDP/img1/'+ img_path.split('/')[-1]
+    img_path = '/content/CenterTrack/data/mot17/train/MOT17-02-SDP/img1/' + str(4).zfill(6) + '.jpg'
+    img_index  = 4
+
+    # img_index = int(img_path.split('/')[-1].split('.')[0])
+    raft_index_str = str(img_index - 1).zfill(5)
+    raft_index_str_last= str(img_index - 2).zfill(5)
+    raft_path = "/".join(img_path.split('/')[:-2] + ['raft']) + "/" + raft_index_str + '.png'
+    raft_path_last = "/".join(img_path.split('/')[:-2] + ['raft']) + "/" + raft_index_str_last + '.png'
+    
     ann_ids = coco.getAnnIds(imgIds=[img_id])
     anns = copy.deepcopy(coco.loadAnns(ids=ann_ids))
+
     img = cv2.imread(img_path)
-    return img, anns, img_info, img_path
+    try:
+      raft  = cv2.imread(raft_path)
+    except:
+      raft = cv2.imread(raft_path_last)
+      
+    return img, raft, anns, img_info, img_path
 
   def _load_data(self, index):
     coco = self.coco
     img_dir = self.img_dir
     img_id = self.images[index]
-    img, anns, img_info, img_path = self._load_image_anns(img_id, coco, img_dir)
+    img, raft, anns, img_info, img_path = self._load_image_anns(img_id, coco, img_dir)
 
-    return img, anns, img_info, img_path
+    return img, raft, anns, img_info, img_path
 
 
   def _load_pre_data(self, video_id, frame_id, sensor_id=1):
@@ -198,8 +219,8 @@ class GenericDataset(data.Dataset):
     rand_id = np.random.choice(len(img_ids))
     img_id, pre_frame_id = img_ids[rand_id]
     frame_dist = abs(frame_id - pre_frame_id)
-    img, anns, _, _ = self._load_image_anns(img_id, self.coco, self.img_dir)
-    return img, anns, frame_dist
+    img, raft, anns, _, _ = self._load_image_anns(img_id, self.coco, self.img_dir)
+    return img, raft, anns, frame_dist
 
 
   def _get_pre_dets(self, anns, trans_input, trans_output):
@@ -315,6 +336,18 @@ class GenericDataset(data.Dataset):
 
 
   def _get_input(self, img, trans_input):
+    inp = cv2.warpAffine(img, trans_input, 
+                        (self.opt.input_w, self.opt.input_h),
+                        flags=cv2.INTER_LINEAR)
+    
+    inp = (inp.astype(np.float32) / 255.)
+    if self.split == 'train' and not self.opt.no_color_aug:
+      color_aug(self._data_rng, inp, self._eig_val, self._eig_vec)
+    inp = (inp - self.mean) / self.std
+    inp = inp.transpose(2, 0, 1)
+    return inp
+
+  def _get_input_raft(self, img, trans_input):
     inp = cv2.warpAffine(img, trans_input, 
                         (self.opt.input_w, self.opt.input_h),
                         flags=cv2.INTER_LINEAR)

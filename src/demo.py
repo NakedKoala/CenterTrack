@@ -91,7 +91,7 @@ def demo(opt):
       # results[cnt] is a list of dicts:
       #  [{'bbox': [x1, y1, x2, y2], 'tracking_id': id, 'category_id': c, ...}]
       results[cnt] = ret['results']
-
+      cv2.imwrite(f'../results/{str(cnt).zfill(5)}.png', ret['generic'])
       # save debug image to video
       if opt.save_video:
         out.write(ret['generic'])

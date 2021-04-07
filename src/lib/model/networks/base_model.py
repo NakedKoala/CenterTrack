@@ -70,9 +70,9 @@ class BaseModel(nn.Module):
     def imgpre2feats(self, x, pre_img=None, pre_hm=None):
       raise NotImplementedError
 
-    def forward(self, x, pre_img=None, pre_hm=None):
+    def forward(self, x, pre_img=None, pre_hm=None, raft=None):
       if (pre_hm is not None) or (pre_img is not None):
-        feats = self.imgpre2feats(x, pre_img, pre_hm)
+        feats = self.imgpre2feats(x, pre_img, pre_hm, raft)
       else:
         feats = self.img2feats(x)
       out = []

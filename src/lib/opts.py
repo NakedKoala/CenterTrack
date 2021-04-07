@@ -114,7 +114,7 @@ class opts(object):
 
     # train
     self.parser.add_argument('--optim', default='adam')
-    self.parser.add_argument('--lr', type=float, default=1.25e-4, 
+    self.parser.add_argument('--lr', type=float, default=1.25e-4 / 4, 
                              help='learning rate for batch size 32.')
     self.parser.add_argument('--lr_step', type=str, default='60',
                              help='drop learning rate by 10.')
@@ -122,7 +122,7 @@ class opts(object):
                              help='when to save the model to disk.')
     self.parser.add_argument('--num_epochs', type=int, default=70,
                              help='total training epochs.')
-    self.parser.add_argument('--batch_size', type=int, default=32,
+    self.parser.add_argument('--batch_size', type=int, default=32 // 4,
                              help='batch size')
     self.parser.add_argument('--master_batch_size', type=int, default=-1,
                              help='batch size on the master gpu.')
