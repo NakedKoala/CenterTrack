@@ -61,7 +61,7 @@ def main(opt):
   print('Setting up train data...')
   train_loader = torch.utils.data.DataLoader(
       Dataset(opt, 'train'), batch_size=opt.batch_size, shuffle=True,
-      num_workers=0, pin_memory=True, drop_last=True
+      num_workers=opt.num_workers, pin_memory=True, drop_last=True
   )
 
 
