@@ -142,6 +142,8 @@ class opts(object):
     self.parser.add_argument('--use_kpt_center', action='store_true')
     self.parser.add_argument('--add_05', action='store_true')
     self.parser.add_argument('--dense_reg', type=int, default=1, help='')
+    self.parser.add_argument('--raft', type=bool, default=True)
+
 
     # test
     self.parser.add_argument('--flip_test', action='store_true',

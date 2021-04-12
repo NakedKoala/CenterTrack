@@ -26,6 +26,8 @@ def get_optimizer(opt, model):
   return optimizer
 
 def main(opt):
+  print(f'--raft default to {opt.raft}')
+  
   torch.manual_seed(opt.seed)
   torch.backends.cudnn.benchmark = not opt.not_cuda_benchmark and not opt.test
   Dataset = get_dataset(opt.dataset)

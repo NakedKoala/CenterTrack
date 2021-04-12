@@ -253,12 +253,12 @@ class DLA(nn.Module):
                            level_root=True, root_residual=residual_root)
         self.level5 = Tree(levels[5], block, channels[4], channels[5], 2,
                            level_root=True, root_residual=residual_root)
-
-        self.raft_layer = nn.Sequential(
-            nn.Conv2d(3, channels[0], kernel_size=7, stride=1,
-                      padding=3, bias=False),
-            nn.BatchNorm2d(channels[0], momentum=BN_MOMENTUM),
-            nn.ReLU(inplace=True))
+        if opt.raft:
+            self.raft_layer = nn.Sequential(
+                nn.Conv2d(3, channels[0], kernel_size=7, stride=1,
+                        padding=3, bias=False),
+                nn.BatchNorm2d(channels[0], momentum=BN_MOMENTUM),
+                nn.ReLU(inplace=True))
 
         if opt.pre_img:
             self.pre_img_layer = nn.Sequential(
@@ -315,7 +315,7 @@ class DLA(nn.Module):
         if pre_img is not None:
             x = x + self.pre_img_layer(pre_img)
         if raft is not None: 
-            x = x + self.pre_img_layer(raft)
+            x = x + self.raft_layer(raft)
         if pre_hm is not None:
             x = x + self.pre_hm_layer(pre_hm)
         for i in range(6):
@@ -626,8 +626,8 @@ class DLASeg(BaseModel):
             node_type=self.node_type)
         
 
-    def img2feats(self, x):
-        x = self.base(x)
+    def img2feats(self, x, raft=None):
+        x = self.base(x, raft)
         x = self.dla_up(x)
 
         y = []

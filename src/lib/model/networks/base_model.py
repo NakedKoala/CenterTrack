@@ -64,17 +64,17 @@ class BaseModel(nn.Module):
                 fill_fc_weights(fc)
             self.__setattr__(head, fc)
 
-    def img2feats(self, x):
+    def img2feats(self, x, raft=None):
       raise NotImplementedError
     
-    def imgpre2feats(self, x, pre_img=None, pre_hm=None):
+    def imgpre2feats(self, x, pre_img=None, pre_hm=None, raft=None):
       raise NotImplementedError
 
     def forward(self, x, pre_img=None, pre_hm=None, raft=None):
       if (pre_hm is not None) or (pre_img is not None):
         feats = self.imgpre2feats(x, pre_img, pre_hm, raft)
       else:
-        feats = self.img2feats(x)
+        feats = self.img2feats(x, raft)
       out = []
       if self.opt.model_output_list:
         for s in range(self.num_stacks):
