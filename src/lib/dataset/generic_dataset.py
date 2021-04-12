@@ -168,10 +168,10 @@ class GenericDataset(data.Dataset):
 
     ## TODO: to remove
     # img_path = '/content/CenterTrack/data/mot17/train/MOT17-02-SDP/img1/'+ img_path.split('/')[-1]
-    img_path = '/content/CenterTrack/data/mot17/train/MOT17-02-SDP/img1/' + str(4).zfill(6) + '.jpg'
-    img_index  = 4
+    # img_path = '/content/CenterTrack/data/mot17/train/MOT17-02-SDP/img1/' + str(4).zfill(6) + '.jpg'
+    # img_index  = 4
 
-    # img_index = int(img_path.split('/')[-1].split('.')[0])
+    img_index = int(img_path.split('/')[-1].split('.')[0])
     raft_index_str = str(img_index - 1).zfill(5)
     raft_index_str_last= str(img_index - 2).zfill(5)
     raft_path = "/".join(img_path.split('/')[:-2] + ['raft']) + "/" + raft_index_str + '.png'
