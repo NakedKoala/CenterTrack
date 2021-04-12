@@ -36,6 +36,13 @@ class GenericDataset(data.Dataset):
            [5, 7], [7, 9], [6, 8], [8, 10], 
            [6, 12], [5, 11], [11, 12], 
            [12, 14], [14, 16], [11, 13], [13, 15]]
+
+  raft_mean = np.array([0.91924369, 0.9259629,  0.91308366],
+                   dtype=np.float32).reshape(1, 1, 3)
+  raft_std = np.array([0.16230706, 0.12400776, 0.15449273],
+                   dtype=np.float32).reshape(1, 1, 3)
+
+
   mean = np.array([0.40789654, 0.44719302, 0.47026115],
                    dtype=np.float32).reshape(1, 1, 3)
   std  = np.array([0.28863828, 0.27408164, 0.27809835],
@@ -97,7 +104,7 @@ class GenericDataset(data.Dataset):
       c, s, rot, [opt.output_w, opt.output_h])
     inp = self._get_input(img, trans_input)
     raft_proc = self._get_input_raft(raft, trans_input)
-    ret = {'image': inp, 'raft': raft_proc}
+    ret = {'image': inp, 'raft': raft_proc, 'raft_raw': raft}
     gt_det = {'bboxes': [], 'scores': [], 'clses': [], 'cts': []}
 
     pre_cts, track_ids = None, None
@@ -292,8 +299,8 @@ class GenericDataset(data.Dataset):
     else:
       sf = self.opt.scale
       cf = self.opt.shift
-      if type(s) == float:
-        s = [s, s]
+      # if type(s) == float:
+      #   s = [s, s]
       c[0] += s * np.clip(np.random.randn()*cf, -2*cf, 2*cf)
       c[1] += s * np.clip(np.random.randn()*cf, -2*cf, 2*cf)
       aug_s = np.clip(np.random.randn()*sf + 1, 1 - sf, 1 + sf)
@@ -355,7 +362,7 @@ class GenericDataset(data.Dataset):
     inp = (inp.astype(np.float32) / 255.)
     if self.split == 'train' and not self.opt.no_color_aug:
       color_aug(self._data_rng, inp, self._eig_val, self._eig_vec)
-    inp = (inp - self.mean) / self.std
+    inp = (inp - self.raft_mean) / self.raft_std
     inp = inp.transpose(2, 0, 1)
     return inp
 
