@@ -83,6 +83,7 @@ class Detector(object):
       else:
         # prefetch testing
         images = pre_processed_images['images'][scale][0]
+        rafts = pre_processed_images['rafts'][scale][0]
         meta = pre_processed_images['meta'][scale]
         meta = {k: v.numpy()[0] for k, v in meta.items()}
         if 'pre_dets' in pre_processed_images['meta']:
@@ -91,6 +92,7 @@ class Detector(object):
           meta['cur_dets'] = pre_processed_images['meta']['cur_dets']
       
       images = images.to(self.opt.device, non_blocking=self.opt.non_block_test)
+      rafts = rafts.to(self.opt.device, non_blocking=self.opt.non_block_test)
 
       # initializing tracker
       pre_hms, pre_inds = None, None
@@ -115,8 +117,9 @@ class Detector(object):
       # run the network
       # output: the output feature maps, only used for visualizing
       # dets: output tensors after extracting peaks
+  
       output, dets, forward_time = self.process(
-        images, self.pre_images, pre_hms, pre_inds, return_time=True)
+        images, self.pre_images, pre_hms, rafts, pre_inds, return_time=True)
       net_time += forward_time - pre_process_time
       decode_time = time.time()
       dec_time += decode_time - forward_time
@@ -332,11 +335,11 @@ class Detector(object):
     return output
 
 
-  def process(self, images, pre_images=None, pre_hms=None,
+  def process(self, images, pre_images=None, pre_hms=None, rafts=None,
     pre_inds=None, return_time=False):
     with torch.no_grad():
       torch.cuda.synchronize()
-      output = self.model(images, pre_images, pre_hms)[-1]
+      output = self.model(images, pre_images, pre_hms, rafts)[-1]
       output = self._sigmoid_output(output)
       output.update({'pre_inds': pre_inds})
       if self.opt.flip_test:
