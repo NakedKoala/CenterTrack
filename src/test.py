@@ -37,14 +37,15 @@ class PrefetchDataset(torch.utils.data.Dataset):
     img_index = int(img_path.split('/')[-1].split('.')[0])
     raft_index_str = str(img_index - 1).zfill(5)
     raft_index_str_last= str(img_index - 2).zfill(5)
+   
     raft_path = "/".join(img_path.split('/')[:-2] + ['raft']) + "/" + raft_index_str + '.png'
     raft_path_last = "/".join(img_path.split('/')[:-2] + ['raft']) + "/" + raft_index_str_last + '.png'
     
-  
-    try:
-      raft  = cv2.imread(raft_path)
-    except:
+    
+    raft  = cv2.imread(raft_path)
+    if not isinstance(raft, type(np.array([1]))):
       raft = cv2.imread(raft_path_last)
+
    
     # raft_path = ?
     # raft = ?
@@ -57,8 +58,10 @@ class PrefetchDataset(torch.utils.data.Dataset):
       input_meta['calib'] = calib
       images[scale], meta[scale] = self.pre_process_func(
         image, scale, input_meta)
+     
       rafts[scale], _ = self.pre_process_func(
         raft, scale, input_meta)
+     
     ret = {'images': images, 'rafts': rafts, 'image': image, 'raft': raft, 'meta': meta}
     if 'frame_id' in img_info and img_info['frame_id'] == 1:
       ret['is_first_frame'] = 1
