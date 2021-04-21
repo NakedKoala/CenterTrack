@@ -21,6 +21,7 @@ class BaseModel(nn.Module):
           head_kernel = 3
         self.num_stacks = num_stacks
         self.heads = heads
+        self.heads['tracking'] = 4 
         for head in self.heads:
             classes = self.heads[head]
             head_conv = head_convs[head]
@@ -64,17 +65,17 @@ class BaseModel(nn.Module):
                 fill_fc_weights(fc)
             self.__setattr__(head, fc)
 
-    def img2feats(self, x):
+    def img2feats(self, x, raft=None):
       raise NotImplementedError
     
-    def imgpre2feats(self, x, pre_img=None, pre_hm=None):
+    def imgpre2feats(self, x, pre_img=None, pre_hm=None, raft=None):
       raise NotImplementedError
 
-    def forward(self, x, pre_img=None, pre_hm=None):
+    def forward(self, x, pre_img=None, pre_hm=None, raft=None):
       if (pre_hm is not None) or (pre_img is not None):
-        feats = self.imgpre2feats(x, pre_img, pre_hm)
+        feats = self.imgpre2feats(x, pre_img, pre_hm, raft)
       else:
-        feats = self.img2feats(x)
+        feats = self.img2feats(x, raft)
       out = []
       if self.opt.model_output_list:
         for s in range(self.num_stacks):
@@ -86,6 +87,11 @@ class BaseModel(nn.Module):
         for s in range(self.num_stacks):
           z = {}
           for head in self.heads:
+            if head != 'tracking':
               z[head] = self.__getattr__(head)(feats[s])
+
+          tracking_head_input = torch.cat([z['wh'], feats[s]], dim=1)
+          z['tracking'] = self.__getattr__('tracking')(tracking_head_input)
+
           out.append(z)
       return out
