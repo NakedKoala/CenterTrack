@@ -73,9 +73,9 @@ class BaseModel(nn.Module):
 
     def forward(self, x, pre_img=None, pre_hm=None, raft=None):
       if (pre_hm is not None) or (pre_img is not None):
-        feats = self.imgpre2feats(x, pre_img, pre_hm, raft)
+        feats = self.imgpre2feats(x, pre_img, pre_hm)
       else:
-        feats = self.img2feats(x, raft)
+        feats = self.img2feats(x)
       out = []
       if self.opt.model_output_list:
         for s in range(self.num_stacks):
