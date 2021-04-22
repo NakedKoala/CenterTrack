@@ -310,19 +310,25 @@ class DLA(nn.Module):
         return nn.Sequential(*modules)
 
     def forward(self, x, pre_img=None, pre_hm=None, raft=None):
+
         y = []
+        raft_embed = []
         x = self.base_layer(x)
+
         if pre_img is not None:
             x = x + self.pre_img_layer(pre_img)
         if raft is not None: 
-            x = x + self.raft_layer(raft)
+            raft_repr = self.raft_layer(raft)
         if pre_hm is not None:
             x = x + self.pre_hm_layer(pre_hm)
         for i in range(6):
             x = getattr(self, 'level{}'.format(i))(x)
             y.append(x)
+
+            raft_repr = getattr(self, 'level{}'.format(i))(raft_repr)
+            raft_embed.append(raft_repr)
         
-        return y
+        return y, raft_embed
 
     def load_pretrained_model(self, data='imagenet', name='dla34', hash='ba72cf86'):
         # fc = self.fc
@@ -638,12 +644,18 @@ class DLASeg(BaseModel):
         return [y[-1]]
 
     def imgpre2feats(self, x, pre_img=None, pre_hm=None, raft=None):
-        x = self.base(x, pre_img, pre_hm, raft)
+        x, raft = self.base(x, pre_img, pre_hm, raft)
         x = self.dla_up(x)
+        raft = self.dla_up(raft)
+
 
         y = []
+        raft_embed = [] 
         for i in range(self.last_level - self.first_level):
             y.append(x[i].clone())
-        self.ida_up(y, 0, len(y))
+            raft_embed.append(raft[i].clone())
 
-        return [y[-1]]
+        self.ida_up(y, 0, len(y))
+        self.ida_up(raft_embed, 0, len(raft_embed))
+
+        return [y[-1]], [raft_embed[-1]]

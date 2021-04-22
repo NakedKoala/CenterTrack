@@ -72,7 +72,7 @@ class BaseModel(nn.Module):
 
     def forward(self, x, pre_img=None, pre_hm=None, raft=None):
       if (pre_hm is not None) or (pre_img is not None):
-        feats = self.imgpre2feats(x, pre_img, pre_hm, raft)
+        feats, raft_embed = self.imgpre2feats(x, pre_img, pre_hm, raft)
       else:
         feats = self.img2feats(x, raft)
       out = []
@@ -86,6 +86,11 @@ class BaseModel(nn.Module):
         for s in range(self.num_stacks):
           z = {}
           for head in self.heads:
+            if head != 'tracking':
               z[head] = self.__getattr__(head)(feats[s])
+          tracking_input = torch.cat([raft_embed[s], feats[s]], dim=1)
+          z['tracking'] = self.__getattr__('tracking')(tracking_input)
+          import pdb 
+          pdb.set_trace()
           out.append(z)
       return out
