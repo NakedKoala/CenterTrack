@@ -27,7 +27,7 @@ class BaseModel(nn.Module):
             if len(head_conv) > 0:
               out = nn.Conv2d(head_conv[-1], classes, 
                     kernel_size=1, stride=1, padding=0, bias=True)
-              conv = nn.Conv2d(last_channel, head_conv[0],
+              conv = nn.Conv2d(last_channel * 2, head_conv[0],
                                kernel_size=head_kernel, 
                                padding=head_kernel // 2, bias=True)
               convs = [conv]
@@ -86,11 +86,9 @@ class BaseModel(nn.Module):
         for s in range(self.num_stacks):
           z = {}
           for head in self.heads:
-            if head != 'tracking':
-              z[head] = self.__getattr__(head)(feats[s])
-          tracking_input = torch.cat([raft_embed[s], feats[s]], dim=1)
-          z['tracking'] = self.__getattr__('tracking')(tracking_input)
-          import pdb 
-          pdb.set_trace()
+  
+            augmented_feats = torch.cat([feats[s], raft_embed[s]], dim=1)
+            z[head] = self.__getattr__(head)(augmented_feats)
+         
           out.append(z)
       return out
