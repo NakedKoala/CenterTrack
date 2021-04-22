@@ -21,16 +21,24 @@ class BaseModel(nn.Module):
           head_kernel = 3
         self.num_stacks = num_stacks
         self.heads = heads
-        self.heads['tracking'] = 4 
+
         for head in self.heads:
             classes = self.heads[head]
             head_conv = head_convs[head]
             if len(head_conv) > 0:
+             
               out = nn.Conv2d(head_conv[-1], classes, 
-                    kernel_size=1, stride=1, padding=0, bias=True)
-              conv = nn.Conv2d(last_channel, head_conv[0],
-                               kernel_size=head_kernel, 
-                               padding=head_kernel // 2, bias=True)
+                  kernel_size=1, stride=1, padding=0, bias=True)
+             
+              if head != 'tracking':
+                conv = nn.Conv2d(last_channel, head_conv[0],
+                                kernel_size=head_kernel, 
+                                padding=head_kernel // 2, bias=True)
+              else:
+                conv = nn.Conv2d(66, head_conv[0],
+                                kernel_size=head_kernel, 
+                                padding=head_kernel // 2, bias=True)
+
               convs = [conv]
               for k in range(1, len(head_conv)):
                   convs.append(nn.Conv2d(head_conv[k - 1], head_conv[k], 
